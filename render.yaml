@@ -1,0 +1,25 @@
+services:
+  # Backend Service
+  - type: web
+    name: sentinel-bank-backend
+    env: node
+    buildCommand: npm install && npx prisma generate
+    startCommand: npm start
+    rootDir: backend
+    envVars:
+      - key: DATABASE_URL
+        sync: false # User must set this in Render dashboard
+      - key: JWT_SECRET
+        generateValue: true
+      - key: EMAIL
+        sync: false
+      - key: EMAIL_PASS
+        sync: false
+
+  # Frontend Service
+  - type: web
+    name: sentinel-bank-frontend
+    env: static
+    buildCommand: npm install && npm run build
+    publishDir: dist
+    rootDir: frontend

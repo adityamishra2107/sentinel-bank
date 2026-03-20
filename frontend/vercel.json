@@ -1,0 +1,8 @@
+{
+  "name": "sentinel-bank-frontend",
+  "framework": "vite",
+  "public": true,
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
