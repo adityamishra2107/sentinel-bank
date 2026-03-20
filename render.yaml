@@ -1,3 +1,9 @@
+databases:
+  - name: sentinel-bank-db
+    databaseName: sentinel_bank
+    user: sentinel_user
+    plan: free
+
 services:
   # Backend Service
   - type: web
@@ -8,15 +14,21 @@ services:
     rootDir: backend
     envVars:
       - key: DATABASE_URL
-        sync: false # User must set this in Render dashboard
+        fromDatabase:
+          name: sentinel-bank-db
+          property: connectionString
       - key: JWT_SECRET
         generateValue: true
+      - key: NODE_ENV
+        value: production
       - key: EMAIL
         sync: false
       - key: EMAIL_PASS
         sync: false
 
-  # Frontend Service
+  # Frontend Service (Static)
+  # Note: Vercel is usually better for React, but we can host here too if needed.
+  # For now, we'll keep it in render.yaml as an option.
   - type: web
     name: sentinel-bank-frontend
     env: static
