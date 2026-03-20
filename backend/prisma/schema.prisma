@@ -1,0 +1,135 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id          Int       @id @default(autoincrement())
+  name        String
+  email       String    @unique
+  password    String
+  phone       String    @unique
+  role        Role      @default(USER)
+  profilePic  String?
+  dob         DateTime?
+  address     String?
+  pan         String?
+  aadhaar     String?
+  isActive    Boolean   @default(false)
+  resetOtp    String?
+  resetOtpExp DateTime?
+  lastLoginIp String?
+  lastLoginDevice String?
+  
+  accounts    Account[]
+  contacts    Contact[] @relation("UserContacts")
+  savedBy     Contact[] @relation("ContactEntries")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Account {
+  id            Int           @id @default(autoincrement())
+  accountNumber String        @unique
+  ifscCode      String
+  balance       Float         @default(0.0)
+  accountType   AccountType   @default(SAVINGS)
+  status        AccountStatus @default(ACTIVE)
+  
+  userId        Int
+  user          User          @relation(fields: [userId], references: [id])
+  deposits      Deposit[]
+  cards         Card[]
+  
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model Transaction {
+  id              Int               @id @default(autoincrement())
+  senderAccount   String
+  receiverAccount String
+  amount          Float
+  status          TransactionStatus @default(SUCCESS)
+  category        String            @default("TRANSFER") // e.g., Food, Travel, Bills, Transfer
+  timestamp       DateTime          @default(now())
+  isFlagged       Boolean           @default(false) // For AI Fraud Detection
+  riskScore       Float             @default(0.0) // Predictive Analytics AI Score
+}
+
+model Deposit {
+  id              Int               @id @default(autoincrement())
+  accountId       Int
+  amount          Float
+  currency        String            @default("INR")
+  razorpayOrderId String            @unique
+  razorpayPaymentId String?
+  status          DepositStatus     @default(PENDING)
+  timestamp       DateTime          @default(now())
+
+  account         Account           @relation(fields: [accountId], references: [id])
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum AccountType {
+  SAVINGS
+  CURRENT
+}
+
+enum AccountStatus {
+  ACTIVE
+  BLOCKED
+  CLOSED
+}
+
+enum TransactionStatus {
+  SUCCESS
+  FAILED
+  PENDING
+}
+
+enum DepositStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+model Card {
+  id            Int      @id @default(autoincrement())
+  cardNumber    String   @unique
+  cardType      String   @default("VISA")
+  expiryDate    String
+  cvv           String
+  pin           String?  // Added pin field
+  isFrozen      Boolean  @default(false)
+  onlineEnabled Boolean  @default(true)
+  atmEnabled    Boolean  @default(true)
+  limit         Float    @default(50000.0)
+  
+  accountId     Int
+  account       Account  @relation(fields: [accountId], references: [id])
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Contact {
+  id              Int      @id @default(autoincrement())
+  userId          Int      // Who owns this contact list
+  contactUserId   Int      // The user being saved as a contact
+  nickname        String?
+  
+  user            User     @relation("UserContacts", fields: [userId], references: [id])
+  contactUser     User     @relation("ContactEntries", fields: [contactUserId], references: [id])
+  
+  createdAt       DateTime @default(now())
+  
+  @@unique([userId, contactUserId])
+}

@@ -1,0 +1,32 @@
+# Dependency directories
+node_modules/
+
+# Build artifacts
+dist/
+dist-ssr/
+build/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE/Editor
+.vscode/
+.idea/
+*.suo
+*.sln
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# Prisma
+/backend/generated/prisma
