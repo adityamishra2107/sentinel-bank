@@ -1,6 +1,6 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api/api';
 import AuthContext from '../context/AuthContext';
 import { Mail, Lock, AlertCircle, Fingerprint, ScanFace } from 'lucide-react';
 
@@ -34,7 +34,7 @@ const LoginPage = () => {
     setLoading(true);
 
     try {
-      const { data } = await axios.post('http://localhost:5000/api/auth/login', { email, password });
+      const { data } = await api.post('/auth/login', { email, password });
       
       // If login successful, ask to enable biometric if not already enabled
       if (localStorage.getItem('biometricEnabled') !== 'true') {
@@ -81,7 +81,7 @@ const LoginPage = () => {
           // In a real app, this would use a biometric token. 
           // For this simulation, we use a special 'biometric' flag or just the stored email with a session token.
           // For now, we'll use a slightly modified login call that the backend could theoretically support
-          const { data } = await axios.post('http://localhost:5000/api/auth/login', { 
+          const { data } = await api.post('/auth/login', { 
             email: savedEmail, 
             isBiometric: true // Simulated flag
           });

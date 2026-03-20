@@ -1,5 +1,4 @@
-import React, { useState, useRef, useEffect, useContext } from 'react';
-import axios from 'axios';
+import api from '../api/api';
 import { MessageSquare, X, Send, Bot, User as UserIcon, Loader2 } from 'lucide-react';
 import AuthContext from '../context/AuthContext';
 
@@ -33,8 +32,7 @@ const FinanceChatbot = () => {
     setIsTyping(true);
 
     try {
-      const config = { headers: { Authorization: `Bearer ${user.token}` } };
-      const { data } = await axios.post('http://localhost:5000/api/ai/chat', { message: userMsg }, config);
+      const { data } = await api.post('/ai/chat', { message: userMsg });
       
       // Simulate slight delay for "thinking"
       setTimeout(() => {

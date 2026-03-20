@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
+import api from '../api/api';
 import AuthContext from '../context/AuthContext';
 import { User, FileText, Calendar, MapPin, ShieldCheck, AlertTriangle } from 'lucide-react';
 
@@ -16,9 +15,7 @@ const ProfilePage = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const { data } = await axios.get('http://localhost:5000/api/users/profile', {
-          headers: { Authorization: `Bearer ${user.token}` }
-        });
+        const { data } = await api.get('/users/profile');
         setProfile(data);
         setFormData({
           name: data.name || '',
@@ -42,9 +39,7 @@ const ProfilePage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const { data } = await axios.put('http://localhost:5000/api/users/profile', formData, {
-        headers: { Authorization: `Bearer ${user.token}` }
-      });
+      const { data } = await api.put('/users/profile', formData);
       setMessage('Profile updated successfully!');
       setProfile({ ...profile, ...formData, isActive: data.user.isActive });
       setIsEditing(false);

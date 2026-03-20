@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api/api';
 import { Mail, AlertCircle, CheckCircle2, ArrowLeft } from 'lucide-react';
 
 const ForgotPasswordPage = () => {
@@ -14,7 +14,7 @@ const ForgotPasswordPage = () => {
     setLoading(true);
 
     try {
-      const { data } = await axios.post('http://localhost:5000/api/users/forgot-password', { email });
+      const { data } = await api.post('/users/forgot-password', { email });
       setStatus({ 
         type: 'success', 
         message: data.message || 'Password reset link sent to your email.',

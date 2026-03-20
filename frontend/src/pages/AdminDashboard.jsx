@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
+import api from '../api/api';
 import AuthContext from '../context/AuthContext';
 import { Users, ShieldAlert, CheckCircle, XCircle, TrendingUp, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area } from 'recharts';
@@ -25,12 +24,11 @@ const AdminDashboard = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const config = { headers: { Authorization: `Bearer ${user.token}` } };
       
       const [statsRes, usersRes, flaggedRes] = await Promise.all([
-        axios.get('http://localhost:5000/api/admin/reports', config),
-        axios.get('http://localhost:5000/api/admin/users', config),
-        axios.get('http://localhost:5000/api/admin/transactions/flagged', config)
+        api.get('/admin/reports'),
+        api.get('/admin/users'),
+        api.get('/admin/transactions/flagged')
       ]);
 
       setStats(statsRes.data);
@@ -45,8 +43,7 @@ const AdminDashboard = () => {
 
   const handleApproveKYC = async (userId) => {
     try {
-      const config = { headers: { Authorization: `Bearer ${user.token}` } };
-      await axios.put(`http://localhost:5000/api/admin/kyc/${userId}/approve`, {}, config);
+      await api.put(`/admin/kyc/${userId}/approve`);
       fetchData();
     } catch (error) {
       console.error(error);
@@ -55,8 +52,7 @@ const AdminDashboard = () => {
 
   const handleReviewTx = async (txId, action) => {
     try {
-      const config = { headers: { Authorization: `Bearer ${user.token}` } };
-      await axios.put(`http://localhost:5000/api/admin/transactions/${txId}/review`, { action }, config);
+      await api.put(`/admin/transactions/${txId}/review`, { action });
       fetchData();
     } catch (error) {
       console.error(error);

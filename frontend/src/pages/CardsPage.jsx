@@ -1,6 +1,7 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { ArrowLeft, Snowflake, ShieldAlert, KeyRound, Globe, Smartphone, BellRing } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import api from '../api/api';
 import AuthContext from '../context/AuthContext';
 import VirtualCard from '../components/VirtualCard';
 
@@ -12,11 +13,10 @@ const CardsPage = () => {
 
   const fetchCardData = async () => {
     try {
-      const config = { headers: { Authorization: `Bearer ${user.token}` } };
       // For MVP, we assume the user has at least one account and fetch card for it
-      const accRes = await axios.get('http://localhost:5000/api/accounts', config);
+      const accRes = await api.get('/accounts');
       if (accRes.data.length > 0) {
-        const cardRes = await axios.get(`http://localhost:5000/api/cards/account/${accRes.data[0].id}`, config);
+        const cardRes = await api.get(`/cards/account/${accRes.data[0].id}`);
         setCard(cardRes.data);
       }
     } catch (error) {
@@ -33,8 +33,7 @@ const CardsPage = () => {
   const toggleFreeze = async () => {
     if (!card) return;
     try {
-      const config = { headers: { Authorization: `Bearer ${user.token}` } };
-      const { data } = await axios.patch(`http://localhost:5000/api/cards/${card.id}/freeze`, {}, config);
+      const { data } = await api.patch(`/cards/${card.id}/freeze`, {});
       setCard(data);
     } catch (error) {
       alert('Failed to update card status');
@@ -44,10 +43,9 @@ const CardsPage = () => {
   const updateSetting = async (setting, value) => {
     if (!card) return;
     try {
-      const config = { headers: { Authorization: `Bearer ${user.token}` } };
-      const { data } = await axios.patch(`http://localhost:5000/api/cards/${card.id}/settings`, {
+      const { data } = await api.patch(`/cards/${card.id}/settings`, {
         [setting]: value
-      }, config);
+      });
       setCard(data);
     } catch (error) {
       alert('Failed to update card settings');
@@ -56,13 +54,12 @@ const CardsPage = () => {
 
   const issueNewCard = async () => {
     try {
-      const config = { headers: { Authorization: `Bearer ${user.token}` } };
-      const accRes = await axios.get('http://localhost:5000/api/accounts', config);
+      const accRes = await api.get('/accounts');
       if (accRes.data.length === 0) return alert('Please open an account first');
       
-      const { data } = await axios.post('http://localhost:5000/api/cards/issue', {
+      const { data } = await api.post('/cards/issue', {
         accountId: accRes.data[0].id
-      }, config);
+      });
       setCard(data);
       alert('Virtual Card Issued Successfully!');
     } catch (error) {

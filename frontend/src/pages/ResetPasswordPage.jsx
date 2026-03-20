@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api/api';
 import { Lock, AlertCircle, CheckCircle2, ArrowRight } from 'lucide-react';
 
 const ResetPasswordPage = () => {
@@ -27,7 +27,7 @@ const ResetPasswordPage = () => {
     setLoading(true);
 
     try {
-      const { data } = await axios.post(`http://localhost:5000/api/users/reset-password/${token}`, { password });
+      const { data } = await api.post(`/users/reset-password/${token}`, { password });
       setStatus({ type: 'success', message: data.message || 'Password reset successful!' });
       
       // Clear form

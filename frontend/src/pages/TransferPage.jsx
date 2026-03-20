@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
+import api from '../api/api';
 import AuthContext from '../context/AuthContext';
 import { Send, Clock, ArrowUpRight, ArrowDownLeft, Search, QrCode as QrIcon, User as UserIcon, X } from 'lucide-react';
 import QRCode from 'react-qr-code';
@@ -22,11 +21,10 @@ const TransferPage = () => {
 
   const fetchData = async () => {
     try {
-      const config = { headers: { Authorization: `Bearer ${user.token}` } };
       const [accRes, txRes, contactRes] = await Promise.all([
-        axios.get('http://localhost:5000/api/accounts', config),
-        axios.get('http://localhost:5000/api/transactions/history', config),
-        axios.get('http://localhost:5000/api/contacts', config)
+        api.get('/accounts'),
+        api.get('/transactions/history'),
+        api.get('/contacts')
       ]);
       setAccounts(accRes.data);
       if (accRes.data.length > 0 && !formData.senderAccountNum) {
@@ -45,15 +43,13 @@ const TransferPage = () => {
     setStatus({ type: '', message: '' });
 
     try {
-      const config = { headers: { Authorization: `Bearer ${user.token}` } };
-      const { data } = await axios.post(
-        'http://localhost:5000/api/transactions/transfer',
+      const { data } = await api.post(
+        '/transactions/transfer',
         {
           senderAccountNum: formData.senderAccountNum,
           receiverAccountNum: formData.receiverAccountNum,
           amount: parseFloat(formData.amount)
-        },
-        config
+        }
       );
       
       setStatus({ type: 'success', message: data.message });

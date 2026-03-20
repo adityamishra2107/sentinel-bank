@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api/api';
 import AuthContext from '../context/AuthContext';
 import { 
   ArrowUpRight, ArrowDownLeft, QrCode, CreditCard, 
@@ -23,11 +23,9 @@ const Dashboard = () => {
 
   const fetchData = async () => {
     try {
-      const config = { headers: { Authorization: `Bearer ${user.token}` } };
-      
       const [accountsRes, insightsRes] = await Promise.all([
-        axios.get('http://localhost:5000/api/accounts', config),
-        axios.get('http://localhost:5000/api/transactions/insights', config).catch(() => ({ data: null }))
+        api.get('/accounts'),
+        api.get('/transactions/insights').catch(() => ({ data: null }))
       ]);
 
       const accountsData = accountsRes.data;
@@ -55,12 +53,10 @@ const Dashboard = () => {
     if (!amountToAdd || !selectedAccountId) return;
 
     try {
-      const config = { headers: { Authorization: `Bearer ${user.token}` } };
-      
-      const res = await axios.post('http://localhost:5000/api/payments/create-order', {
+      const res = await api.post('/payments/create-order', {
         amount: parseFloat(amountToAdd),
         accountId: selectedAccountId
-      }, config);
+      });
 
       const { order, depositId } = res.data;
 
@@ -73,12 +69,12 @@ const Dashboard = () => {
         order_id: order.id,
         handler: async function (response) {
           try {
-            await axios.post('http://localhost:5000/api/payments/verify', {
+            await api.post('/payments/verify', {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
               depositId
-            }, config);
+            });
             
             alert('Deposit Successful!');
             setShowAddMoney(false);

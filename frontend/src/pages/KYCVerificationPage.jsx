@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api/api';
 import AuthContext from '../context/AuthContext';
 import { ShieldCheck, UploadCloud, CheckCircle2, AlertCircle, FileText, CreditCard } from 'lucide-react';
 
@@ -54,14 +54,11 @@ const KYCVerificationPage = () => {
     setStatus({ type: '', message: '' });
 
     try {
-      const config = { headers: { Authorization: `Bearer ${user.token}` } };
-      
-      // We simulate full KYC completion. The backend sets isActive to true if these 3 fields exist.
-      const { data } = await axios.put('http://localhost:5000/api/users/profile', {
+      const { data } = await api.put('/users/profile', {
         pan: formData.pan,
         aadhaar: formData.aadhaar,
         address: formData.address,
-      }, config);
+      });
 
       // Update the global user context with the new isActive status
       login({ ...user, ...data.user, isActive: true });
