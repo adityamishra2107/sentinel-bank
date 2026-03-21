@@ -27,7 +27,10 @@ services:
 
   - type: web
     name: sentinel-bank-frontend
-    runtime: static
+    runtime: node
     buildCommand: npm install && npm run build
-    staticPublishPath: dist
+    startCommand: npx serve -s dist -l 10000
     rootDir: frontend
+    envVars:
+      - key: NODE_ENV
+        value: production
