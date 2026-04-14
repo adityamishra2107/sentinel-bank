@@ -79,7 +79,35 @@ const addContact = async (req, res) => {
   }
 };
 
+// @desc    Delete a contact
+// @route   DELETE /api/contacts/:id
+// @access  Private
+const deleteContact = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const contact = await prisma.contact.findUnique({
+      where: { id: parseInt(id) },
+    });
+
+    if (!contact) {
+      return res.status(404).json({ message: 'Contact not found' });
+    }
+
+    if (contact.userId !== req.user.id) {
+      return res.status(403).json({ message: 'Unauthorized' });
+    }
+
+    await prisma.contact.delete({ where: { id: parseInt(id) } });
+
+    res.json({ message: 'Contact removed' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   getContacts,
-  addContact
+  addContact,
+  deleteContact,
 };

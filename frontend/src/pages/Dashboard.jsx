@@ -48,8 +48,7 @@ const Dashboard = () => {
     fetchData();
   }, [user, navigate]);
 
-  const handleAddMoney = async (e) => {
-    e.preventDefault();
+  const handleAddMoney = async () => {
     if (!amountToAdd || !selectedAccountId) return;
 
     try {
@@ -61,7 +60,7 @@ const Dashboard = () => {
       const { order, depositId } = res.data;
 
       const options = {
-        key: 'rzp_test_YourTestKeyId',
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_YourTestKeyId',
         amount: order.amount,
         currency: order.currency,
         name: 'SentinelBank',
@@ -93,6 +92,23 @@ const Dashboard = () => {
 
     } catch (error) {
       alert('Failed to initiate payment.');
+    }
+  };
+
+  const handleSimulateAddFunds = async () => {
+    if (!amountToAdd || !selectedAccountId) return;
+
+    try {
+      await api.post('/payments/simulate-add-funds', {
+        amount: parseFloat(amountToAdd),
+        accountId: selectedAccountId
+      });
+      alert(`₹${parseFloat(amountToAdd).toLocaleString('en-IN')} added successfully (simulation)!`);
+      setShowAddMoney(false);
+      setAmountToAdd('');
+      fetchData();
+    } catch (error) {
+      alert(error.response?.data?.message || 'Failed to add funds.');
     }
   };
 
@@ -183,8 +199,8 @@ const Dashboard = () => {
         {/* Add Money Form Expansion */}
         {showAddMoney && (
           <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 animate-in slide-in-from-top-4 fade-in">
-            <h3 className="text-sm font-bold mb-4 text-slate-800 dark:text-slate-100">Deposit Funds via Razorpay</h3>
-            <form onSubmit={handleAddMoney} className="flex flex-col sm:flex-row gap-3 items-end">
+            <h3 className="text-sm font-bold mb-4 text-slate-800 dark:text-slate-100">Deposit Funds</h3>
+            <form className="flex flex-col sm:flex-row gap-3 items-end">
               <div className="w-full sm:flex-1">
                 <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Select Account</label>
                 <select 
@@ -204,9 +220,14 @@ const Dashboard = () => {
                   value={amountToAdd} onChange={(e) => setAmountToAdd(e.target.value)}
                 />
               </div>
-              <button type="submit" className="w-full sm:w-auto bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold shadow-sm hover:bg-indigo-700 transition">
-                Proceed
-              </button>
+              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                <button type="button" onClick={handleAddMoney} className="bg-indigo-600 text-white px-4 py-3 rounded-xl font-bold shadow-sm hover:bg-indigo-700 transition text-sm whitespace-nowrap">
+                  Pay via Razorpay
+                </button>
+                <button type="button" onClick={handleSimulateAddFunds} className="bg-emerald-600 text-white px-4 py-3 rounded-xl font-bold shadow-sm hover:bg-emerald-700 transition text-sm whitespace-nowrap">
+                  Simulate
+                </button>
+              </div>
             </form>
           </div>
         )}
