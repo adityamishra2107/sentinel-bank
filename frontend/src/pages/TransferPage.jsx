@@ -18,6 +18,7 @@ const TransferPage = () => {
   const [contactForm, setContactForm] = useState({ email: '', accountNumber: '', nickname: '' });
   const [contactStatus, setContactStatus] = useState({ type: '', message: '' });
   const [contactLoading, setContactLoading] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState(null);
 
   useEffect(() => {
     if (user) fetchData();
@@ -100,12 +101,17 @@ const TransferPage = () => {
   };
 
   const handleDeleteContact = async (contactId) => {
-    if (!window.confirm('Remove this contact?')) return;
+    if (pendingDeleteId !== contactId) {
+      setPendingDeleteId(contactId);
+      return;
+    }
     try {
       await api.delete(`/contacts/${contactId}`);
+      setPendingDeleteId(null);
       fetchData();
     } catch (err) {
       console.error('Delete contact failed', err);
+      setPendingDeleteId(null);
     }
   };
 
@@ -213,8 +219,8 @@ const TransferPage = () => {
                   <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 truncate max-w-[60px]">{contact.name}</span>
                   <button
                     onClick={() => handleDeleteContact(contact.id)}
-                    className="absolute -top-1 -right-1 p-0.5 bg-red-100 dark:bg-red-900/40 text-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                    title="Remove contact"
+                    className={`absolute -top-1 -right-1 p-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity ${pendingDeleteId === contact.id ? 'bg-red-500 text-white' : 'bg-red-100 dark:bg-red-900/40 text-red-500'}`}
+                    title={pendingDeleteId === contact.id ? 'Click again to confirm removal' : 'Remove contact'}
                   >
                     <X className="w-3 h-3" />
                   </button>

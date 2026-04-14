@@ -29,7 +29,8 @@ const issueCard = async (req, res) => {
     const cardNumber = '4' + Math.random().toString().slice(2, 17); // Random 16 digits starting with 4
     const expiryDate = '12/28';
     const cvv = Math.floor(100 + Math.random() * 900).toString();
-    const rawPin = '1234';
+    // Generate a random 4-digit PIN (do NOT use a predictable default)
+    const rawPin = Math.floor(1000 + Math.random() * 9000).toString();
     const salt = await bcrypt.genSalt(10);
     const hashedPin = await bcrypt.hash(rawPin, salt);
 

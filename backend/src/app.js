@@ -41,7 +41,7 @@ const allowedOrigins = process.env.NODE_ENV === 'production'
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (e.g., mobile apps, curl)
+    // Allow requests with no origin (e.g., Capacitor mobile app, Postman, server-to-server)
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) return callback(null, true);
     return callback(new Error('Not allowed by CORS'));
