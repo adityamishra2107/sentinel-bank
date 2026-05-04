@@ -1,6 +1,6 @@
 import api from '../api/api';
 import AuthContext from '../context/AuthContext';
-import { Send, Clock, ArrowUpRight, ArrowDownLeft, Search, QrCode as QrIcon, User as UserIcon, X } from 'lucide-react';
+import { Send, Clock, ArrowUpRight, ArrowDownLeft, Search, QrCode as QrIcon, User as UserIcon, X, UserPlus, Trash2 } from 'lucide-react';
 import QRCode from 'react-qr-code';
 
 const TransferPage = () => {
@@ -14,6 +14,11 @@ const TransferPage = () => {
   const [status, setStatus] = useState({ type: '', message: '' });
   const [loading, setLoading] = useState(false);
   const [showQr, setShowQr] = useState(false);
+  const [showAddContact, setShowAddContact] = useState(false);
+  const [contactForm, setContactForm] = useState({ email: '', accountNumber: '', nickname: '' });
+  const [contactStatus, setContactStatus] = useState({ type: '', message: '' });
+  const [contactLoading, setContactLoading] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState(null);
 
   useEffect(() => {
     if (user) fetchData();
@@ -68,7 +73,46 @@ const TransferPage = () => {
 
   const selectContact = (accountNum) => {
     setFormData(prev => ({ ...prev, receiverAccountNum: accountNum }));
-    // Scroll to form or highlight it
+  };
+
+  const handleAddContact = async (e) => {
+    e.preventDefault();
+    if (!contactForm.email && !contactForm.accountNumber) {
+      setContactStatus({ type: 'error', message: 'Please provide an email or account number.' });
+      return;
+    }
+    setContactLoading(true);
+    setContactStatus({ type: '', message: '' });
+    try {
+      await api.post('/contacts', {
+        email: contactForm.email || undefined,
+        accountNumber: contactForm.accountNumber || undefined,
+        nickname: contactForm.nickname || undefined,
+      });
+      setContactStatus({ type: 'success', message: 'Contact added successfully!' });
+      setContactForm({ email: '', accountNumber: '', nickname: '' });
+      fetchData();
+      setTimeout(() => setShowAddContact(false), 1000);
+    } catch (err) {
+      setContactStatus({ type: 'error', message: err.response?.data?.message || 'Failed to add contact.' });
+    } finally {
+      setContactLoading(false);
+    }
+  };
+
+  const handleDeleteContact = async (contactId) => {
+    if (pendingDeleteId !== contactId) {
+      setPendingDeleteId(contactId);
+      return;
+    }
+    try {
+      await api.delete(`/contacts/${contactId}`);
+      setPendingDeleteId(null);
+      fetchData();
+    } catch (err) {
+      console.error('Delete contact failed', err);
+      setPendingDeleteId(null);
+    }
   };
 
   return (
@@ -108,30 +152,84 @@ const TransferPage = () => {
         <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-sm border border-slate-200 dark:border-slate-700 animate-fade-in-up">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300">My Contacts</h3>
-            <button className="text-xs text-indigo-600 dark:text-indigo-400 font-semibold hover:underline">Manage</button>
+            <button onClick={() => { setShowAddContact(!showAddContact); setContactStatus({ type: '', message: '' }); }} className="text-xs text-indigo-600 dark:text-indigo-400 font-semibold hover:underline flex items-center gap-1">
+              <UserPlus className="w-3.5 h-3.5" /> Add Contact
+            </button>
           </div>
+
+          {/* Add Contact Form */}
+          {showAddContact && (
+            <form onSubmit={handleAddContact} className="mb-4 p-4 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 space-y-3">
+              {contactStatus.message && (
+                <p className={`text-xs font-medium ${contactStatus.type === 'success' ? 'text-emerald-600' : 'text-red-500'}`}>{contactStatus.message}</p>
+              )}
+              <input
+                type="text"
+                placeholder="Nickname (optional)"
+                className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white"
+                value={contactForm.nickname}
+                onChange={e => setContactForm(p => ({ ...p, nickname: e.target.value }))}
+              />
+              <input
+                type="email"
+                placeholder="Email address"
+                className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white"
+                value={contactForm.email}
+                onChange={e => setContactForm(p => ({ ...p, email: e.target.value }))}
+              />
+              <p className="text-[10px] text-slate-400 text-center font-medium">— or —</p>
+              <input
+                type="text"
+                placeholder="Account number"
+                className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm outline-none focus:ring-2 focus:ring-indigo-500 dark:text-white font-mono"
+                value={contactForm.accountNumber}
+                onChange={e => setContactForm(p => ({ ...p, accountNumber: e.target.value }))}
+              />
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  disabled={contactLoading}
+                  className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold py-2 rounded-lg transition disabled:opacity-60"
+                >
+                  {contactLoading ? 'Saving...' : 'Save Contact'}
+                </button>
+                <button type="button" onClick={() => setShowAddContact(false)} className="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 transition">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </form>
+          )}
+
           <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
             {contacts.length === 0 ? (
               <p className="text-xs text-slate-400 py-2">No contacts yet. Add them to send money faster!</p>
             ) : (
               contacts.map((contact, i) => (
-                <div 
-                  key={contact.id} 
-                  onClick={() => selectContact(contact.accountNumber)}
-                  className="flex flex-col items-center gap-2 cursor-pointer group min-w-[66px]"
+                <div
+                  key={contact.id}
+                  className="flex flex-col items-center gap-2 group min-w-[66px] relative"
                 >
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-sm group-hover:scale-105 transition-transform bg-gradient-to-br ${
-                    ['from-emerald-400 to-emerald-600', 'from-blue-400 to-blue-600', 'from-violet-400 to-violet-600', 'from-rose-400 to-rose-600', 'from-amber-400 to-amber-600'][i % 5]
-                  }`}>
+                  <div
+                    onClick={() => selectContact(contact.accountNumber)}
+                    className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-sm cursor-pointer group-hover:scale-105 transition-transform bg-gradient-to-br ${
+                      ['from-emerald-400 to-emerald-600', 'from-blue-400 to-blue-600', 'from-violet-400 to-violet-600', 'from-rose-400 to-rose-600', 'from-amber-400 to-amber-600'][i % 5]
+                    }`}>
                     {contact.name[0]}
                   </div>
                   <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 truncate max-w-[60px]">{contact.name}</span>
+                  <button
+                    onClick={() => handleDeleteContact(contact.id)}
+                    className={`absolute -top-1 -right-1 p-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity ${pendingDeleteId === contact.id ? 'bg-red-500 text-white' : 'bg-red-100 dark:bg-red-900/40 text-red-500'}`}
+                    title={pendingDeleteId === contact.id ? 'Click again to confirm removal' : 'Remove contact'}
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
                 </div>
               ))
             )}
-            <div className="flex flex-col items-center gap-2 cursor-pointer group min-w-[60px]" onClick={() => alert("Add contact feature coming soon!")}>
+            <div className="flex flex-col items-center gap-2 cursor-pointer group min-w-[60px]" onClick={() => { setShowAddContact(true); setContactStatus({ type: '', message: '' }); }}>
               <div className="w-12 h-12 rounded-full border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-400 group-hover:border-indigo-500 group-hover:text-indigo-500 transition-colors">
-                <Search className="w-5 h-5" />
+                <UserPlus className="w-5 h-5" />
               </div>
               <span className="text-[10px] font-bold text-slate-400">Add New</span>
             </div>

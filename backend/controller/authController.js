@@ -54,10 +54,9 @@ const loginUser = async (req, res) => {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
-    // Allow login if password matches OR if it's a valid biometric request (simulated)
     const isPasswordCorrect = password ? await bcrypt.compare(password, user.password) : false;
     
-    if (isPasswordCorrect || (isBiometric && user)) {
+    if (isPasswordCorrect) {
       // Security Check: IP and Device
       const currentIp = req.ip || req.connection.remoteAddress;
       const currentDevice = req.headers['user-agent'] || 'Unknown Device';
